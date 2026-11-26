@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Problem in queries.py{% endblock %}
+{% block content %}
+<h1>Problem in app/queries.py</h1>
+<div class="block error">
+  <span class="tag red">Error</span>
+  {% if error.line %}<p>Line {{ error.line }}{% if error.code %}: <code>{{ error.code.strip() }}</code>{% endif %}</p>{% endif %}
+  <p class="mono">{{ error.message }}</p>
+  {% if error.hint %}<p class="hint">{{ error.hint }}</p>{% endif %}
+</div>
+<p class="dim">Fix the file, save it, and refresh this page.</p>
+{% endblock %}

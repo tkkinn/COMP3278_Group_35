@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_macros.html" import result_table %}
+{% block title %}{{ feature.title }} · {{ app_name }}{% endblock %}
+{% block content %}
+<p class="crumb"><a href="{{ url_for('index') }}">Features</a> / {{ number }}</p>
+<h1>{{ feature.title }}</h1>
+{% if feature.description %}<p class="dim">{{ feature.description }}</p>{% endif %}
+
+{% if feature.fields %}
+<form class="block form" method="get" action="{{ url_for('feature_page', number=number) }}">
+  {% for fld in feature.fields %}
+  <label>
+    <span class="label">{{ fld.label }}{% if not fld.required %} <em>(optional)</em>{% endif %}</span>
+    {% if fld.name in option_errors %}
+      <span class="mono">The drop-down list could not be loaded: {{ option_errors[fld.name] }}</span>
+    {% elif fld.name in options %}
+      <select name="{{ fld.name }}">
+        <option value="">— choose —</option>
+        {% for value, label in options[fld.name] %}
+        <option value="{{ value }}" {% if values.get(fld.name) == value|string %}selected{% endif %}>{{ "NULL" if label is none else label|show }}</option>
+        {% endfor %}
+      </select>
+    {% elif fld.type == 'textarea' %}
+      <textarea name="{{ fld.name }}" rows="3">{{ values.get(fld.name, '') }}</textarea>
+    {% else %}
+      <input type="{{ fld.type }}" name="{{ fld.name }}" value="{{ values.get(fld.name, '') }}"
+             {% if fld.type == 'number' %}step="any"{% endif %}>
+    {% endif %}
+  </label>
+  {% endfor %}
+  <button type="submit">{{ feature.button }}</button>
+</form>
+{% endif %}
+
+{% if run %}
+{% if run.error %}
+<div class="block error">
+  <span class="tag red">{{ 'Check your input' if run.stage == 'input' else 'Error' }}</span>
+  <p class="mono">{{ run.error }}</p>
+  {% if run.hint %}<p class="hint">{{ run.hint }}</p>{% endif %}
+</div>
+{% else %}
+<div class="block flat">
+  <div class="result-head"><span class="tag">Result</span>
+    <span class="count">{% if run.more %}first {{ max_rows }} rows{% else %}{{ run.rows|length }} row{{ '' if run.rows|length == 1 else 's' }}{% endif %}</span></div>
+  {% if run.rows %}{{ result_table(run.columns, run.rows) }}{% else %}<p class="empty">No rows.</p>{% endif %}
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

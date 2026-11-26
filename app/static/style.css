@@ -1,0 +1,109 @@
+/* ---------------------------------------------------------------
+   Look: cream paper, navy outlines, boxes with a 3D edge,
+   uppercase headings, one yellow accent.
+   --------------------------------------------------------------- */
+:root {
+  --ink: #2d2a6e;
+  --text: #1e1c4a;
+  --text-dim: #5b5880;
+  --text-faint: #8f8cae;
+  --bg: #f7f4ec;
+  --panel: #fffdf8;
+  --panel-2: #f3f0e6;
+  --line: #ddd9e6;
+  --accent: #f2b84b;
+  --accent-soft: #fbf1da;
+  --green: #16a34a;
+  --red: #e11d48;
+  --red-soft: #fdecef;
+  --depth: 8px;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --display: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.5; }
+main { max-width: 1080px; margin: 0 auto; padding: 18px 24px 56px; }
+a { color: var(--ink); }
+code, pre { font-family: var(--mono); font-size: 13px; }
+
+h1, h2, h3, .label, .tag, nav a, .brand, button { font-family: var(--display); }
+h1 { font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink); margin: 18px 0 6px; }
+h3 { font-size: 16px; font-weight: 700; color: var(--ink); margin: 0 0 4px; }
+.dim { color: var(--text-dim); }
+.crumb { margin: 0; font-size: 13px; color: var(--text-dim); }
+.crumb a { color: var(--text-dim); }
+
+/* ---- top bar */
+.topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  padding: 10px 24px; border-bottom: 1.5px solid var(--ink); }
+.brand { font-size: 19px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink); text-decoration: none; }
+nav { display: flex; gap: 6px; }
+nav a { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim);
+  text-decoration: none; padding: 5px 10px; border: 1.5px solid transparent; }
+nav a:hover { color: var(--ink); }
+nav a.on { color: var(--ink); background: var(--accent); border-color: var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+
+/* ---- boxes with a 3D edge: a top face and a right face drawn around the box */
+.block { position: relative; background: var(--panel); border: 1.5px solid var(--ink);
+  margin: calc(var(--depth) + 6px) var(--depth) 18px 0; padding: 16px 18px; }
+.block::before, .block::after { content: ""; position: absolute; z-index: -1;  /* behind the box, so its border stays visible */
+  background: var(--panel-2); border: 1.5px solid var(--ink); }
+.block::before {
+  left: -1.5px; width: calc(100% + 3px); top: calc(-1 * var(--depth) - 1.5px); height: var(--depth);
+  border-bottom: none; transform: skewX(-45deg); transform-origin: bottom left;
+}
+.block::after {
+  top: -1.5px; height: calc(100% + 3px); right: calc(-1 * var(--depth) - 1.5px); width: var(--depth);
+  border-left: none; transform: skewY(-45deg); transform-origin: top left;
+}
+.block.flat { padding: 0; }
+.block.error { background: var(--red-soft); }
+
+/* ---- small labels */
+.tag { display: inline-block; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--ink); background: var(--accent); border: 1px solid var(--ink); padding: 1px 7px; }
+.tag.red { background: var(--red); color: #fff; }
+.tag.plain { background: var(--panel); }
+
+/* ---- buttons and forms */
+button { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer;
+  color: #fff; background: var(--ink); border: 1.5px solid var(--ink); border-radius: 2px; padding: 8px 16px;
+  box-shadow: 2px 2px 0 var(--accent); }
+button:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--accent); }
+button.secondary { color: var(--ink); background: var(--panel); box-shadow: 2px 2px 0 var(--ink); }
+button.secondary:hover { box-shadow: 3px 3px 0 var(--ink); }
+form.inline { display: inline; margin: 0; }
+.form label { display: block; margin-bottom: 14px; }
+.label { display: block; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 4px; }
+.label em { font-style: normal; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text-faint); }
+input, select, textarea { font: inherit; width: 100%; max-width: 480px; padding: 7px 10px; color: var(--text);
+  background: #fff; border: 1.5px solid var(--ink); border-radius: 2px; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ---- cards (features, tables) */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px 22px; }
+.cards .block { margin-bottom: 0; }
+.card { display: block; height: 100%; text-decoration: none; color: var(--text); }
+.card:hover { background: var(--accent-soft); }
+.card p { margin: 0; color: var(--text-dim); font-size: 14px; }
+.num { font-family: var(--mono); font-weight: 400; color: var(--text-faint); margin-right: 8px; }
+
+/* ---- data tables */
+.table-wrap { overflow-x: auto; }
+table.data { border-collapse: collapse; width: 100%; font-family: var(--mono); font-size: 13px; }
+table.data th { text-align: left; font-family: var(--display); font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-dim); padding: 8px 12px; border-bottom: 1.5px solid var(--ink); background: var(--panel-2); }
+table.data td { padding: 6px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.data tr:last-child td { border-bottom: none; }
+.null { color: var(--text-faint); font-style: italic; }
+pre.sql { margin: 0; white-space: pre-wrap; background: var(--panel-2); border: 1px solid var(--line); padding: 6px 8px; font-size: 12px; }
+.result-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1.5px solid var(--ink); }
+.count { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+.empty { padding: 12px 14px; margin: 0; color: var(--text-dim); font-style: italic; }
+.done { font-size: 16px; margin: 0; }
+
+/* ---- errors */
+.mono { font-family: var(--mono); font-size: 13px; }
+.hint { margin: 8px 0 0; }

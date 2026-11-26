@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Features</h1>
+{% if not features %}
+<p class="dim">No features yet.</p>
+{% endif %}
+<div class="cards">
+  {% for n, f in features %}
+  <div class="block flat">
+    <a class="card block-inner" href="{{ url_for('feature_page', number=n) }}" style="padding:16px 18px">
+      <h3><span class="num">{{ n }}</span>{{ f.title }}</h3>
+      {% if f.description %}<p>{{ f.description }}</p>{% endif %}
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

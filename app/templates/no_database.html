@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}No database yet{% endblock %}
+{% block content %}
+<h1>No database yet</h1>
+<div class="block">
+  <p>database/app.db was not found. Open a terminal in the starter-kit folder and run:</p>
+  <pre class="sql">{{ command }}</pre>
+  <p class="dim">Then refresh this page. README.md, section 3, shows how.</p>
+</div>
+{% endblock %}
