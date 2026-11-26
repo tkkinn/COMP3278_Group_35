@@ -1,156 +1,137 @@
 # =======================================================================
-#  queries.py  —  ALL the SQL of your app lives in this file
+#  queries.py — conference ticketing features (starter set)
 # =======================================================================
+#  These 9 features are a working starter set for the conference schema in
+#  database/schema.sql. Emma, Ruairi and Jacob can rename, refine or replace
+#  them with their final feature list.
 #
-#  Each Feature(...) below becomes one page of your app. A feature answers
-#  one question a user has, with one SQL query (SELECT ...):
-#
-#      Feature(
-#          title="A member's loans",               # name in the menu
-#          description="Books one member borrowed",# one sentence (optional)
-#          fields=[                                # boxes the user fills in (optional)
-#              Field("member_id", "Member",
-#                    options_sql="SELECT member_id, name FROM members"),
-#          ],
-#          button="Show loans",                    # text on the button (optional)
-#          sql="""
-#              SELECT b.title, l.loan_date
-#              FROM loans AS l
-#              JOIN books AS b ON b.book_id = l.book_id
-#              WHERE l.member_id = :member_id
-#          """,
-#      ),
-#
-#  Rules
-#    * One Feature = exactly ONE query. The app only reads data: it never
-#      adds, changes or deletes rows (all data comes from seed.sql).
-#    * Write :name in the SQL wherever a value typed by the user goes,
-#      and add a Field("name", ...) with the same name.
-#    * Field types: "text" (default), "number", "date", "textarea".
-#      options_sql="SELECT value, label FROM ..." turns a box into a drop-down.
-#      required=False lets the user leave a box empty (the SQL gets NULL).
-#    * Save this file and refresh the browser: no restart needed.
-#
-#  The features below are a DEMO for the tiny library in
-#  database/schema.sql. Replace them with features for YOUR project.
+#  Each Feature(...) is one page of the app and exactly ONE SELECT query.
+#  User-typed values are passed as :name parameters, never concatenated.
 # =======================================================================
 from kit import Feature, Field
 
-APP_NAME = "Mini Library (demo)"   # the name shown at the top of every page
+APP_NAME = "Conference Ticketing (demo)"
 
-# Every Feature(...) goes inside the square brackets below, each followed by a comma.
 FEATURES = [
 
     Feature(
-        title="All books",
-        description="Every book in the library.",
+        title="All events",
+        description="Every event with its dates and venue.",
         sql="""
-            SELECT book_id, title, author, year
-            FROM books
-            ORDER BY title
+            SELECT e.event_id, e.name, e.start_date, e.end_date, v.name AS venue
+            FROM events AS e
+            JOIN venues AS v ON v.venue_id = e.venue_id
+            ORDER BY e.start_date
         """,
     ),
 
     Feature(
-        title="Search books by title",
-        description="Books whose title contains a word.",
+        title="Sessions for an event",
+        description="All sessions in one event, with the speaker.",
         fields=[
-            Field("keyword", "Title contains"),
+            Field("event_id", "Event",
+                  options_sql="SELECT event_id, name FROM events ORDER BY name"),
         ],
-        button="Search",
+        button="Show sessions",
         sql="""
-            SELECT book_id, title, author, year
-            FROM books
-            WHERE title LIKE '%' || :keyword || '%'
-            ORDER BY title
+            SELECT s.session_id, s.title, s.room, s.capacity, s.status,
+                   sp.first_name || ' ' || sp.last_name AS speaker
+            FROM sessions AS s
+            JOIN speakers AS sp ON sp.speaker_id = s.speaker_id
+            WHERE s.event_id = :event_id
+            ORDER BY s.session_id
         """,
     ),
 
     Feature(
-        title="A member's loans",
-        description="All books one member has borrowed.",
+        title="Registrations per event",
+        description="How many registrations each event has.",
+        sql="""
+            SELECT e.event_id, e.name, COUNT(r.registration_id) AS registrations
+            FROM events AS e
+            LEFT JOIN registrations AS r ON r.event_id = e.event_id
+            GROUP BY e.event_id, e.name
+            ORDER BY registrations DESC, e.name
+        """,
+    ),
+
+    Feature(
+        title="Ticket revenue by type",
+        description="Total confirmed ticket revenue for each ticket type.",
+        sql="""
+            SELECT ticket_type, COUNT(*) AS tickets, SUM(price) AS revenue
+            FROM registrations
+            WHERE status = 'confirmed'
+            GROUP BY ticket_type
+            ORDER BY revenue DESC
+        """,
+    ),
+
+    Feature(
+        title="Attendees who never registered",
+        description="People in the attendee list with no registration.",
+        sql="""
+            SELECT attendee_id, first_name || ' ' || last_name AS name, email, organization
+            FROM attendees
+            WHERE attendee_id NOT IN (SELECT attendee_id FROM registrations)
+            ORDER BY last_name, first_name
+        """,
+    ),
+
+    Feature(
+        title="Speakers by affiliation",
+        description="How many speakers each organization has.",
+        sql="""
+            SELECT affiliation, COUNT(*) AS speakers
+            FROM speakers
+            GROUP BY affiliation
+            ORDER BY speakers DESC, affiliation
+        """,
+    ),
+
+    Feature(
+        title="Events with many registrations",
+        description="Events with more than a given number of registrations.",
         fields=[
-            Field("member_id", "Member",
-                  options_sql="SELECT member_id, name FROM members ORDER BY name"),
+            Field("minimum", "More than (registrations)", type="number"),
         ],
-        button="Show loans",
+        button="Show events",
         sql="""
-            SELECT m.name, b.title, l.loan_date, l.return_date
-            FROM loans AS l
-            JOIN members AS m ON m.member_id = l.member_id
-            JOIN books   AS b ON b.book_id   = l.book_id
-            WHERE l.member_id = :member_id
-            ORDER BY l.loan_date DESC
+            SELECT e.event_id, e.name, COUNT(r.registration_id) AS registrations
+            FROM events AS e
+            JOIN registrations AS r ON r.event_id = e.event_id
+            GROUP BY e.event_id, e.name
+            HAVING COUNT(r.registration_id) > :minimum
+            ORDER BY registrations DESC
         """,
     ),
 
     Feature(
-        title="Books on loan now",
-        description="Books that are borrowed and not returned yet, and who has them.",
+        title="Full sessions",
+        description="Sessions currently marked full.",
         sql="""
-            SELECT b.title, m.name AS borrowed_by, l.loan_date
-            FROM loans AS l
-            JOIN books   AS b ON b.book_id   = l.book_id
-            JOIN members AS m ON m.member_id = l.member_id
-            WHERE l.return_date IS NULL
-            ORDER BY l.loan_date
+            SELECT s.session_id, s.title, e.name AS event, s.room, s.capacity, s.status
+            FROM sessions AS s
+            JOIN events AS e ON e.event_id = s.event_id
+            WHERE s.status = 'full'
+            ORDER BY e.start_date, s.session_id
         """,
     ),
 
     Feature(
-        title="Books on the shelf",
-        description="Books that can be borrowed right now.",
-        sql="""
-            SELECT title, author
-            FROM books
-            WHERE book_id NOT IN (SELECT book_id FROM loans WHERE return_date IS NULL)
-            ORDER BY title
-        """,
-    ),
-
-    Feature(
-        title="Most borrowed books",
-        description="How many times each book has been borrowed.",
-        sql="""
-            SELECT b.title, COUNT(l.loan_id) AS times_borrowed
-            FROM books AS b
-            LEFT JOIN loans AS l ON l.book_id = b.book_id
-            GROUP BY b.book_id, b.title
-            ORDER BY times_borrowed DESC, b.title
-        """,
-    ),
-
-    Feature(
-        title="Long loans",
-        description="Books kept longer than a number of days and not returned yet.",
+        title="Sessions by speaker",
+        description="All sessions given by one speaker.",
         fields=[
-            Field("days", "Longer than (days)", type="number"),
+            Field("speaker_id", "Speaker",
+                  options_sql="SELECT speaker_id, first_name || ' ' || last_name FROM speakers ORDER BY last_name, first_name"),
         ],
-        button="Show",
+        button="Show sessions",
         sql="""
-            SELECT b.title, m.name, l.loan_date,
-                   CAST(JULIANDAY('now', 'localtime') - JULIANDAY(l.loan_date) AS INTEGER) AS days_out
-            FROM loans AS l
-            JOIN books   AS b ON b.book_id   = l.book_id
-            JOIN members AS m ON m.member_id = l.member_id
-            WHERE l.return_date IS NULL
-              AND JULIANDAY('now', 'localtime') - JULIANDAY(l.loan_date) > :days
-            ORDER BY days_out DESC
-        """,
-    ),
-
-    Feature(
-        title="New members",
-        description="Members who joined on or after a date.",
-        fields=[
-            Field("since", "Joined on or after", type="date"),
-        ],
-        button="Show",
-        sql="""
-            SELECT name, email, joined_on
-            FROM members
-            WHERE joined_on >= :since
-            ORDER BY joined_on
+            SELECT s.session_id, s.title, e.name AS event, s.room, s.capacity, s.status
+            FROM sessions AS s
+            JOIN events AS e ON e.event_id = s.event_id
+            WHERE s.speaker_id = :speaker_id
+            ORDER BY e.start_date, s.session_id
         """,
     ),
 ]
