@@ -43,23 +43,31 @@ FEATURES = [
         """,
     ),
 
+    # Student 3036716552: Refined feature - Registrations per event
     Feature(
         title="Registrations per event",
-        description="How many registrations each event has.",
+        description="Confirmed registration count for every event, with venue and dates.",
         sql="""
-            SELECT e.event_id, e.name, COUNT(r.registration_id) AS registrations
+            SELECT e.event_id, e.name, v.name AS venue, e.start_date, e.end_date,
+                   COUNT(r.registration_id) AS confirmed_registrations
             FROM events AS e
-            LEFT JOIN registrations AS r ON r.event_id = e.event_id
-            GROUP BY e.event_id, e.name
-            ORDER BY registrations DESC, e.name
+            JOIN venues AS v ON v.venue_id = e.venue_id
+            LEFT JOIN registrations AS r
+              ON r.event_id = e.event_id AND r.status = 'confirmed'
+            GROUP BY e.event_id, e.name, v.name, e.start_date, e.end_date
+            ORDER BY confirmed_registrations DESC, e.start_date, e.name
         """,
     ),
 
+    # Student 3036716552: Refined feature - Ticket revenue by type
     Feature(
         title="Ticket revenue by type",
-        description="Total confirmed ticket revenue for each ticket type.",
+        description="Ticket count and total confirmed revenue for each ticket type.",
         sql="""
-            SELECT ticket_type, COUNT(*) AS tickets, SUM(price) AS revenue
+            SELECT ticket_type,
+                   COUNT(*) AS tickets,
+                   ROUND(SUM(price), 2) AS revenue,
+                   ROUND(AVG(price), 2) AS average_ticket_price
             FROM registrations
             WHERE status = 'confirmed'
             GROUP BY ticket_type
@@ -89,20 +97,24 @@ FEATURES = [
         """,
     ),
 
+    # Student 3036716552: Refined feature - Events with many registrations
     Feature(
         title="Events with many registrations",
-        description="Events with more than a given number of registrations.",
+        description="Events whose confirmed registration count exceeds a user-entered minimum.",
         fields=[
-            Field("minimum", "More than (registrations)", type="number"),
+            Field("minimum", "Minimum confirmed registrations", type="number"),
         ],
         button="Show events",
         sql="""
-            SELECT e.event_id, e.name, COUNT(r.registration_id) AS registrations
+            SELECT e.event_id, e.name, v.name AS venue, e.start_date,
+                   COUNT(r.registration_id) AS confirmed_registrations
             FROM events AS e
-            JOIN registrations AS r ON r.event_id = e.event_id
-            GROUP BY e.event_id, e.name
+            JOIN venues AS v ON v.venue_id = e.venue_id
+            JOIN registrations AS r
+              ON r.event_id = e.event_id AND r.status = 'confirmed'
+            GROUP BY e.event_id, e.name, v.name, e.start_date
             HAVING COUNT(r.registration_id) > :minimum
-            ORDER BY registrations DESC
+            ORDER BY confirmed_registrations DESC, e.start_date, e.name
         """,
     ),
 
