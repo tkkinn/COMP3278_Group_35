@@ -75,20 +75,26 @@ FEATURES = [
         """,
     ),
 
+    # Student 3036062779: Refined feature - Attendees who never registered
     Feature(
         title="Attendees who never registered",
-        description="People in the attendee list with no registration.",
+        description="Attendees with no registration record for any event.",
         sql="""
-            SELECT attendee_id, first_name || ' ' || last_name AS name, email, organization
-            FROM attendees
-            WHERE attendee_id NOT IN (SELECT attendee_id FROM registrations)
-            ORDER BY last_name, first_name
+            SELECT a.attendee_id, a.first_name, a.last_name, a.email, a.organization
+            FROM attendees AS a
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM registrations AS r
+                WHERE r.attendee_id = a.attendee_id
+            )
+            ORDER BY a.last_name, a.first_name, a.attendee_id
         """,
     ),
 
+    # Student 3036062779: Refined feature - Speakers by affiliation
     Feature(
         title="Speakers by affiliation",
-        description="How many speakers each organization has.",
+        description="Number of speakers at each affiliation.",
         sql="""
             SELECT affiliation, COUNT(*) AS speakers
             FROM speakers
@@ -118,15 +124,21 @@ FEATURES = [
         """,
     ),
 
+    # Student 3036062779: Refined feature - Full sessions
     Feature(
         title="Full sessions",
-        description="Sessions currently marked full.",
+        description="Sessions marked full, with their schedule, venue, room, and speaker.",
         sql="""
-            SELECT s.session_id, s.title, e.name AS event, s.room, s.capacity, s.status
+            SELECT s.session_id, s.title, e.name AS event, e.start_date,
+                   s.start_time, s.end_time, v.name AS venue, s.room, s.capacity,
+                   sp.first_name AS speaker_first_name,
+                   sp.last_name AS speaker_last_name, s.status
             FROM sessions AS s
             JOIN events AS e ON e.event_id = s.event_id
+            JOIN venues AS v ON v.venue_id = e.venue_id
+            JOIN speakers AS sp ON sp.speaker_id = s.speaker_id
             WHERE s.status = 'full'
-            ORDER BY e.start_date, s.session_id
+            ORDER BY e.start_date, s.start_time, s.session_id
         """,
     ),
 
